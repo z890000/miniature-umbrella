@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon Analogue Risk Task</title>
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .balloon {
+            margin: 0 auto;
+            width: 200px;
+            height: 230px;
+            background-image: url('https://img.51miz.com/Element/00/48/14/66/3e2a5b11_E481466_9c1dae09.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 5rem;
+            position: relative;
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .balloon:before,
+        .balloon:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: inherit;
+            border-radius: 50%;
+        }
+
+        .balloon:before {
+            top: -50%;
+            left: 0;
+        }
+
+        .balloon:after {
+            top: 0;
+            left: -50%;
+        }
+
+        .inflate,
+        .save {
+            font-size: 1.5rem;
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+
+        .inflate:hover,
+        .save:hover {
+            background-color: #ccc;
+        }
+
+        .account {
+            font-size: 1.2rem;
+            margin: 0.5rem;
+        }
+
+        .round {
+            font-size: 1.2rem;
+            margin: 0.5rem;
+        }
+
+        .balloon.exploded {
+            background-image: url('https://tse2-mm.cn.bing.net/th/id/OIP-C.7QKrpWOWx0YSuqaDTIHPBQHaE0?w=287&h=186&c=7&r=0&o=5&dpr=1.3&pid=1.7');
+        }
+
+		.balloon.exploded:before,
+		.balloon.exploded:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: inherit;
+    border-radius: 50%;
+}
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                background-image: url('https://tse2-mm.cn.bing.net/th/id/OIP-C.7QKrpWOWx0YSuqaDTIHPBQHaE0?w=287&h=186&c=7&r=0&o=5&dpr=1.3&pid=1.7');
+            }
+            50% {
+                transform: scale(1.2);
+                background-image: url('https://tse2-mm.cn.bing.net/th/id/OIP-C.7QKrpWOWx0YSuqaDTIHPBQHaE0?w=287&h=186&c=7&r=0&o=5&dpr=1.3&pid=1.7');
+            }
+            100% {
+                transform: scale(1);
+                background-image: url('https://tse2-mm.cn.bing.net/th/id/OIP-C.7QKrpWOWx0YSuqaDTIHPBQHaE0?w=287&h=186&c=7&r=0&o=5&dpr=1.3&pid=1.7');
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="balloon" id="balloon" style="width: 200px; height: 230px;"></div>
+        <button class="inflate" id="inflate">充气</button>
+        <button class="save" id="save">保存</button>
+        <div class="account" id="temporary-account">临时账户: $0</div>
+        <div class="account" id="permanent-account">永久账户: $0</div>
+        <div class="round" id="round">第 1/30 轮</div>
+        <div class="account" id="bart-value">BART 值: --</div>
+    </div>
+    <script>
+        const balloon = document.getElementById('balloon');
+        const inflateButton = document.getElementById('inflate');
+        const saveButton = document.getElementById('save');
+        const temporaryAccount = document.getElementById('temporary-account');
+        const permanentAccount = document.getElementById('permanent-account');
+        const bartValue = document.getElementById('bart-value');
+        const round = document.getElementById('round');
+
+        let roundNumber = 1;
+        let temporaryBalance = 0;
+        let permanentBalance = 0;
+        let totalInflations = 0;
+        let totalBalloons = 0;
+        let unexplodedBalloons = 30;
+        let savedWidth = 0;
+        let savedHeight = 0;
+
+        inflateButton.addEventListener('click', inflateBalloon);
+        saveButton.addEventListener('click', saveBalloon);
+
+        function inflateBalloon() {
+            const currentWidth = parseInt(balloon.style.width);
+            const currentHeight = parseInt(balloon.style.height);
+            const newWidth = currentWidth + 10;
+            const newHeight = currentHeight + 10;
+            balloon.style.width = newWidth + 'px';
+            balloon.style.height = newHeight + 'px';
+            temporaryBalance += 5;
+            temporaryAccount.textContent = `临时账户: $${temporaryBalance}`;
+            totalInflations++;
+            checkBalloonExplosion();
+        }
+
+        function saveBalloon() {
+            permanentBalance += temporaryBalance;
+            permanentAccount.textContent = `永久账户: $${permanentBalance}`;
+            temporaryBalance = 0;
+            temporaryAccount.textContent = `临时账户: $${temporaryBalance}`;
+            balloon.style.width = '200px';
+            balloon.style.height = '230px';
+            nextRound();
+        }
+
+        function checkBalloonExplosion() {
+            const maxSize = Math.floor(Math.random() * 401) + 200;
+            const currentWidth = parseInt(balloon.style.width);
+            const currentHeight = parseInt(balloon.style.height);
+
+            if (currentWidth > maxSize || currentHeight > maxSize) {
+                savedWidth = currentWidth;
+                savedHeight = currentHeight;
+                balloon.classList.add('exploded');
+
+                temporaryBalance = 0;
+                temporaryAccount.textContent = `临时账户: $${temporaryBalance}`;
+
+                inflateButton.disabled = true;
+                saveButton.disabled = true;
+
+                setTimeout(() => {
+                    balloon.classList.remove('exploded');
+                    balloon.style.width = savedWidth + 'px';
+                    balloon.style.height = savedHeight + 'px';
+                    nextRound();
+
+                    // 重新启用按钮
+                    if (roundNumber <= 30) {
+                        inflateButton.disabled = false;
+                        saveButton.disabled = false;
+                    }
+                }, 1000);
+                unexplodedBalloons--;
+            }
+        }
+
+        function nextRound() {
+            roundNumber++;
+            round.textContent = `第 ${roundNumber}/30 轮`;
+            if (roundNumber > 30) {
+            	inflateButton.disabled = true;
+                saveButton.disabled = true;
+                calculateBARTValue();
+                alert('实验结束，BART值为：' + bartValue.textContent);
+                return;
+            }
+            balloon.style.width = '200px';
+            balloon.style.height = '230px';
+            temporaryBalance = 0;
+            temporaryAccount.textContent = `临时账户: $${temporaryBalance}`;
+        }
+
+        function calculateBARTValue() {
+            if(unexplodedBalloons === 0) { bartValue.textContent = '0'; } else { 
+            let unexplodedInflations = permanentBalance / 5; bartValue.textContent = (unexplodedInflations / unexplodedBalloons).toFixed(2); // 计算BART值 
+            }
+ }
+    </script>
+</body>
+</html>
